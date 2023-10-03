@@ -1,0 +1,84 @@
+server:
+  port: 8091
+
+spring:
+  freemarker:
+    cache: false
+  profiles:
+    active: local                           # local(로컬), dev(개발기), prod(운영기)
+  config:
+    import:
+      # - http://localhost:8091/custom.yml  # url 형태
+      - optional:classpath:custom.yml       # optional: 파일이 존재하지 않아도 에러 미발생
+  #  jackson:
+  #    property-naming-strategy: SNAKE_CASE
+
+---
+# local
+# TestApiApplication -> Edit Configurations.. -> Environment variables -> User 부분에 추가
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    #url: ${LOCAL_DB_URL}
+    #username: ${LOCAL_DB_ID}
+    #password: ${LOCAL_DB_PW}
+    url: jdbc:mysql://localhost:3306/test?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 20230410
+
+---
+# dev
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/test?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 20230410
+
+---
+# prod
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/test?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 20230410
+
+mybatis:
+  configuration:
+#    mapper-locations: classpath:mappers/*.xml  # application.yml 을 통해 mapper 파일 매칭(현재 DatabaseConfig.java 파일에서 매칭)
+    map-underscore-to-camel-case: true        # mybatis 사용 시 mapper 의 밑줄(_) 자동으로 카멜케이스로 치환
+  type-aliases-package: com.example.side_api.util, com.example.side_api.sample.out.entity    # alias 약어 설정(config 에서도 가능)
+
+# http://localhost:8091/swagger-ui/index.html
+# openapi-ui: https://springdoc.org/#properties
+# webmvc-ui: https://springdoc.org/v2/#properties
+# webmvc-ui 설정을 맞춰도 설정 적용이 제대로 안되는 것 같아 일단 그대로 놔둠 -> OpenApiConfig.java 는 적용됨
+springdoc:
+  version: '@project.version@'
+  api-docs:
+    path: /api-docs           # default: /v3/api-docs
+    groups:
+      enabled: true
+  default-consumes-media-type: application/json;charset=UTF-8   # request media type
+  default-produces-media-type: application/json;charset=UTF-8   # response media type
+  cache:
+    disabled: true
+  swagger-ui:
+    # alpha(알파벳순), method(http method 순): DELETE → GET → PATCH → POST → PUT
+    path: /            # swagger HTML 경로(default: /swagger-ui.html)
+    disable-swagger-default-url: true           # swagger-ui default url(petstore html) 문서 비활성화 여부
+    # api-docs 및 swagger-ui.configUrl 을 두번씩 호출하는 것을 방지
+    display-query-params-without-oauth2: true   # json 처리된 config 파일 대신 파라미터를 이용하여 swagger-ui에 접근(default: false)
+    doc-expansion: none       # tag 와 operation 을 펼치는 방식(default: list): list, full, none
+  paths-to-match:
+    - /api/**                 # OpenAPI3 로 문서화할 api path 리스트
